@@ -174,13 +174,30 @@ void handleFormConfig(void)
     config.jeedom.port = (itemp>=0 && itemp<=65535) ? itemp : CFG_JDOM_DEFAULT_PORT ; 
     itemp = server.arg("jdom_freq").toInt();
     if (itemp>0 && itemp<=86400){
-      // Emoncms Update if needed
+      // Jeedom Update if needed
       Tick_jeedom.detach();
       Tick_jeedom.attach(itemp, Task_jeedom);
     } else {
       itemp = 0 ; 
     }
     config.jeedom.freq = itemp;
+
+    // MQTT
+    strncpy(config.mqtt.host,   server.arg("mqtt_host").c_str(),  CFG_MQTT_HOST_SIZE );
+    strncpy(config.mqtt.topic, server.arg("mqtt_topic").c_str(),CFG_MQTT_TOPIC_SIZE );
+    strncpy(config.mqtt.user,   server.arg("mqtt_user").c_str(),CFG_MQTT_USER_SIZE );
+    strncpy(config.mqtt.pwd,   server.arg("mqtt_pwd").c_str(),CFG_MQTT_PWD_SIZE );
+    itemp = server.arg("mqtt_port").toInt();
+    config.mqtt.port = (itemp>=0 && itemp<=65535) ? itemp : CFG_MQTT_DEFAULT_PORT ; 
+    itemp = server.arg("mqtt_freq").toInt();
+    if (itemp>0 && itemp<=86400){
+      // MQTT Update if needed
+      Tick_mqtt.detach();
+      Tick_mqtt.attach(itemp, Task_mqtt);
+    } else {
+      itemp = 0 ; 
+    }
+    config.mqtt.freq = itemp;
 
     if ( saveConfig() ) {
       ret = 200;
@@ -491,6 +508,14 @@ void getConfJSONData(String & r)
   r+=CFG_FORM_EMON_KEY;  r+=FPSTR(FP_QCQ); r+=config.emoncms.apikey; r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_EMON_NODE; r+=FPSTR(FP_QCQ); r+=config.emoncms.node;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_EMON_FREQ; r+=FPSTR(FP_QCQ); r+=config.emoncms.freq;   r+= FPSTR(FP_QCNL); 
+
+  r+=CFG_FORM_MQTT_HOST; r+=FPSTR(FP_QCQ); r+=config.mqtt.host;   r+= FPSTR(FP_QCNL); 
+  r+=CFG_FORM_MQTT_PORT; r+=FPSTR(FP_QCQ); r+=config.mqtt.port;   r+= FPSTR(FP_QCNL); 
+  r+=CFG_FORM_MQTT_TOPIC;  r+=FPSTR(FP_QCQ); r+=config.mqtt.topic;    r+= FPSTR(FP_QCNL); 
+  r+=CFG_FORM_MQTT_USER;  r+=FPSTR(FP_QCQ); r+=config.mqtt.user; r+= FPSTR(FP_QCNL); 
+  r+=CFG_FORM_MQTT_PWD; r+=FPSTR(FP_QCQ); r+=config.mqtt.pwd;   r+= FPSTR(FP_QCNL); 
+  r+=CFG_FORM_MQTT_FREQ; r+=FPSTR(FP_QCQ); r+=config.mqtt.freq;   r+= FPSTR(FP_QCNL); 
+  
   r+=CFG_FORM_OTA_AUTH;  r+=FPSTR(FP_QCQ); r+=config.ota_auth;       r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_OTA_PORT;  r+=FPSTR(FP_QCQ); r+=config.ota_port;       r+= FPSTR(FP_QCNL);
 
@@ -809,4 +834,3 @@ void handleNotFound(void)
   // Led off
   LedBluOFF();
 }
-

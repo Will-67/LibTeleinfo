@@ -201,5 +201,12 @@ void showConfig()
   DebugF("key      :"); Debugln(config.jeedom.apikey); 
   DebugF("compteur :"); Debugln(config.jeedom.adco); 
   DebugF("freq     :"); Debugln(config.jeedom.freq); 
-}
 
+  DebuglnF("\r\n===== MQTT"); 
+  DebugF("host     :"); Debugln(config.mqtt.host); 
+  DebugF("port     :"); Debugln(config.mqtt.port); 
+  DebugF("user      :"); Debugln(config.mqtt.user); 
+  DebugF("pwd      :"); Debugln(config.mqtt.pwd); 
+  DebugF("topic :"); Debugln(config.mqtt.topic); 
+  DebugF("freq     :"); Debugln(config.mqtt.freq);
+}

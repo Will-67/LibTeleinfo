@@ -34,5 +34,9 @@
 boolean httpPost(char * host, uint16_t port, char * url);
 boolean emoncmsPost(void);
 boolean jeedomPost(void);
+boolean mqttPost(void);
+boolean mqttPublish(char *valueName, char *value);
+boolean mqttPublish(char *valueName, int value);
+boolean mqttConnect();
 
 #endif

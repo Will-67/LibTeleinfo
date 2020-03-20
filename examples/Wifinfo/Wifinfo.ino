@@ -63,10 +63,12 @@ Ticker red_ticker;
 Ticker Every_1_Sec;
 Ticker Tick_emoncms;
 Ticker Tick_jeedom;
+Ticker Tick_mqtt;
 
 volatile boolean task_1_sec = false;
 volatile boolean task_emoncms = false;
 volatile boolean task_jeedom = false;
+volatile boolean task_mqtt = false;
 unsigned long seconds = 0;
 
 // sysinfo data
@@ -127,6 +129,18 @@ Comments: Like an Interrupt, need to be short, we set flag for main loop
 void Task_jeedom()
 {
   task_jeedom = true;
+}
+
+/* ======================================================================
+Function: Task_mqtt
+Purpose : callback of mqtt ticker
+Input   : 
+Output  : -
+Comments: Like an Interrupt, need to be short, we set flag for main loop
+====================================================================== */
+void Task_mqtt()
+{
+  task_mqtt = true;
 }
 
 /* ======================================================================
@@ -370,6 +384,13 @@ void ResetConfig(void)
   strcpy_P(config.jeedom.url, CFG_JDOM_DEFAULT_URL);
   //strcpy_P(config.jeedom.adco, CFG_JDOM_DEFAULT_ADCO);
 
+  // MQTT
+  strcpy_P(config.mqtt.host, CFG_MQTT_DEFAULT_HOST);
+  config.mqtt.port = CFG_MQTT_DEFAULT_PORT;
+  strcpy_P(config.mqtt.user, CFG_MQTT_DEFAULT_USER);
+  strcpy_P(config.mqtt.pwd, CFG_MQTT_DEFAULT_PWD);
+  strcpy_P(config.mqtt.topic, CFG_MQTT_DEFAULT_TOPIC);
+  
   config.config |= CFG_RGB_LED;
 
   // save back
@@ -565,11 +586,12 @@ void setup()
 
   // Our configuration is stored into EEPROM
   //EEPROM.begin(sizeof(_Config));
-  EEPROM.begin(1024);
+  EEPROM.begin(2048);
 
   DebugF("Config size="); Debug(sizeof(_Config));
   DebugF(" (emoncms=");   Debug(sizeof(_emoncms));
   DebugF("  jeedom=");   Debug(sizeof(_jeedom));
+  DebugF("  jeedom=");   Debug(sizeof(_mqtt));
   Debugln(')');
   Debugflush();
 
@@ -773,6 +795,10 @@ void setup()
   // Jeedom Update if needed
   if (config.jeedom.freq) 
     Tick_jeedom.attach(config.jeedom.freq, Task_jeedom);
+
+  // MQTT Update if needed
+  if (config.mqtt.freq)
+    Tick_mqtt.attach(config.mqtt.freq, Task_mqtt);
 }
 
 /* ======================================================================
@@ -802,6 +828,9 @@ void loop()
   } else if (task_jeedom) { 
     jeedomPost();  
     task_jeedom=false;
+  } else if (task_mqtt) { 
+    mqttPost();  
+    task_mqtt=false;
   }
 
   // Handle teleinfo serial
@@ -814,4 +843,3 @@ void loop()
 
   //delay(10);
 }
-

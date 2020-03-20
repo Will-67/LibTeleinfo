@@ -45,6 +45,15 @@
 #define CFG_JDOM_DEFAULT_URL  "/jeedom/plugins/teleinfo/core/php/jeeTeleinfo.php"
 #define CFG_JDOM_DEFAULT_ADCO "0000111122223333"
 
+#define CFG_MQTT_HOST_SIZE      32
+#define CFG_MQTT_TOPIC_SIZE     32
+#define CFG_MQTT_USER_SIZE      32
+#define CFG_MQTT_PWD_SIZE       32
+#define CFG_MQTT_DEFAULT_PORT   1883
+#define CFG_MQTT_DEFAULT_TOPIC  "TeleInfo"
+#define CFG_MQTT_DEFAULT_HOST   "192.168.1.1"
+#define CFG_MQTT_DEFAULT_USER   "mqtt-user"
+#define CFG_MQTT_DEFAULT_PWD    "mqtt-password"
 
 // Port pour l'OTA
 #define DEFAULT_OTA_PORT     8266
@@ -79,6 +88,13 @@
 #define CFG_FORM_JDOM_ADCO  FPSTR("jdom_adco")
 #define CFG_FORM_JDOM_FREQ  FPSTR("jdom_freq")
 
+#define CFG_FORM_MQTT_HOST  FPSTR("mqtt_host")
+#define CFG_FORM_MQTT_PORT  FPSTR("mqtt_port")
+#define CFG_FORM_MQTT_USER   FPSTR("mqtt_user")
+#define CFG_FORM_MQTT_PWD   FPSTR("mqtt_pwd")
+#define CFG_FORM_MQTT_TOPIC  FPSTR("mqtt_topic")
+#define CFG_FORM_MQTT_FREQ  FPSTR("mqtt_freq")
+
 #define CFG_FORM_IP  FPSTR("wifi_ip");
 #define CFG_FORM_GW  FPSTR("wifi_gw");
 #define CFG_FORM_MSK FPSTR("wifi_msk");
@@ -112,6 +128,19 @@ typedef struct
   uint8_t filler[90];                   // in case adding data in config avoiding loosing current conf by bad crc*/
 } _jeedom;
 
+// Config for mqtt
+// 256 Bytes
+typedef struct 
+{
+  char  host[CFG_MQTT_HOST_SIZE+1];       // FQDN 
+  char  topic[CFG_MQTT_TOPIC_SIZE+1];     // Topic
+  char  user[CFG_MQTT_USER_SIZE+1];       // User
+  char  pwd[CFG_MQTT_PWD_SIZE+1];         // Password
+  uint16_t port;                          // Protocol port (HTTP/HTTPS)
+  uint32_t freq;                          // refresh rate
+  uint8_t filler[90];                     // in case adding data in config avoiding loosing current conf by bad crc*/
+} _mqtt;
+
 // Config saved into eeprom
 // 1024 bytes total including CRC
 typedef struct 
@@ -126,6 +155,7 @@ typedef struct
   uint8_t  filler[131];      		   // in case adding data in config avoiding loosing current conf by bad crc
   _emoncms emoncms;                // Emoncms configuration
   _jeedom  jeedom;                 // jeedom configuration
+  _mqtt mqtt;                      // mqtt configuration
   uint8_t  filler1[256];           // Another filler in case we need more
   uint16_t crc;
 } _Config;
@@ -145,4 +175,3 @@ void showConfig(void);
 
 
 #endif 
-

@@ -21,6 +21,13 @@
 // **********************************************************************************
 
 #include "webclient.h"
+#include <PubSubClient.h>
+
+unsigned long mqtt_seconds = 0;
+unsigned int mqtt_base = 0;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 /* ======================================================================
 Function: httpPost
@@ -239,3 +246,116 @@ boolean jeedomPost(void)
   return ret;
 }
 
+/* ======================================================================
+Function: mqttPost
+Purpose : Publish data to MQTT Broker
+Input   : 
+Output  : true if published
+Comments: -
+====================================================================== */
+boolean mqttPost(void)
+{
+  boolean err = false;
+  boolean papp_exist = false;
+  unsigned int base = 0;
+  
+  // Connect to broker
+  err = !mqttConnect();
+
+  ValueList * me = tinfo.getList();
+
+  while (me->next && !err)
+  {
+    me = me->next;
+    boolean skip_item = false;
+
+    // Tag virtual item
+    if (*me->name =='_') skip_item = true;
+    
+    // Save BASE value
+    else if(!strcmp(me->name, "BASE")) base = String(me->value).substring(5).toInt();
+    
+    // Check if PAPP exist
+    else if(!strcmp(me->name, "PAPP")) papp_exist = true;
+
+    // Ignore virtual item
+    if (!skip_item)
+    {
+      // Publication
+      err = !mqttPublish(me->name, me->value);
+    }
+  }
+
+  // If PAPP don't exist
+  if(base > 0 && !papp_exist && !err)
+  {
+    // En cas de redémarrage
+    if(mqtt_base > 0 && mqtt_seconds > 0)
+    {
+      // Calculate time delta
+      unsigned long deltaWh = base - mqtt_base;
+      int deltaUp = seconds - mqtt_seconds;
+    
+      // Calculate Wh delta
+      unsigned int papp = 3600 * deltaWh / deltaUp;
+
+      // Publish
+      err = !mqttPublish("PAPP", papp);
+    }
+
+    // Save data
+    mqtt_base = base;
+    mqtt_seconds = seconds;
+  }
+
+  return err;
+}
+
+/* ======================================================================
+Function: mqttPublish
+Purpose : Publish value to MQTT Broker
+Input   : 
+Output  : true if publish ok
+Comments: -
+====================================================================== */
+boolean mqttPublish(char *valueName, char *value)
+{
+  char topic[80];
+
+  sprintf(topic,"%s/%s",config.mqtt.topic, valueName);
+  return client.publish(topic, value);
+}
+
+/* ======================================================================
+Function: mqttPublish
+Purpose : Publish value to MQTT Broker
+Input   : 
+Output  : true if publish ok
+Comments: -
+====================================================================== */
+boolean mqttPublish(char *valueName, int value)
+{
+  char topic[80];
+  char cstr[16];
+  
+  itoa(value, cstr, 10);
+
+  sprintf(topic,"%s/%s",config.mqtt.topic, valueName);
+  return client.publish(topic, cstr);
+}
+
+/* ======================================================================
+Function: mqttConnect
+Purpose : Connect to MQTT Broker
+Input   : 
+Output  : true if connected
+Comments: -
+====================================================================== */
+boolean mqttConnect()
+{
+  if(client.connected()) return true;
+
+  // Connect to broker
+  client.setServer(config.mqtt.host, config.mqtt.port);
+  return client.connect(config.host, config.mqtt.user, config.mqtt.pwd);
+}
